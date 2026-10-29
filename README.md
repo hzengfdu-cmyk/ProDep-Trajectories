@@ -34,7 +34,7 @@ All scripts are located in `scripts/`.
 
 UK Biobank participant data, derived datasets, fitted models and intermediate objects are not included in this repository. By default, scripts read inputs from `data/raw/` and save outputs to `results/`. Local paths, input structures and software settings may require adaptation before analysis.
 
-Open `Mstate_Code.Rproj` or set the working directory to the repository root. Run the scripts individually in their numbered order, completing the required upstream steps first. Sections can also be run step by step in RStudio to inspect intermediate objects.
+Set the working directory to the repository root. Run the scripts individually in their numbered order, completing the required upstream steps first. Sections can also be run step by step in RStudio to inspect intermediate objects.
 
 ## Software
 
