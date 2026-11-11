@@ -172,23 +172,27 @@ for (transition in 1:10) {
 
 fwrite(rbindlist(tir), file.path(results_dir, "09_S5_Transition_Rates.csv"))
 
-# Endpoint rates follow the separate hierarchical person-time definition in the Methods.
-base_time <- episodes[from == 1, .(Participant_ID, baseline_stop = Tstop)]
-
+# Endpoint IR accumulates all time in the eligible originating states.
+# Include intervals ending in censoring after an intermediate transition.
+# Use unexpanded episodes: competing transition rows must not duplicate person-time.
+stopifnot(all(is.finite(episodes$Tstart)), all(is.finite(episodes$Tstop)),
+          all(episodes$Tstop > episodes$Tstart))
 ir <- list()
 
 for (target in 2:5) {
-  observed <- episodes[!is.na(actual_trans) & from %in% seq_len(target - 1L), .(last_transition_time = max(Tstop)),
-    by = Participant_ID
-  ]
-  contribution <- merge(base_time, observed, by = "Participant_ID", all.x = TRUE)
-  contribution[is.na(last_transition_time), `:=`(last_transition_time, baseline_stop)]
-  person_years <- sum(contribution$last_transition_time)
+  risk <- episodes[from %in% seq_len(target - 1L)]
+  person_years <- sum(risk$Tstop - risk$Tstart)
   events <- sum(episodes$actual_trans %in% TRANSITIONS$trans[TRANSITIONS$to == target])
-  confidence <- poisson.test(events, T = person_years)$conf.int * 1000
+  estimate <- lower <- upper <- NA_real_
+  if (person_years > 0) {
+    confidence <- poisson.test(events, T = person_years)$conf.int * 1000
+    estimate <- events / person_years * 1000
+    lower <- confidence[1]
+    upper <- confidence[2]
+  }
   ir[[target]] <- data.table(
     endpoint = STATE_NAMES[target], events = events, person_years = person_years,
-    rate_per_1000 = events / person_years * 1000, lower = confidence[1], upper = confidence[2]
+    rate_per_1000 = estimate, lower = lower, upper = upper
   )
 }
 

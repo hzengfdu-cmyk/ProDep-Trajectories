@@ -87,12 +87,11 @@ baseline[, `:=`(admin_end_date, admin_end_dates$admin_end_date[match(region, adm
 
 baseline <- baseline[, .(Participant_ID, baseline_date, centre, region, admin_end_date)]
 
-# Select only the required first-occurrence and death fields.
+# First-occurrence depression uses F32 only; F33 is not read from this source.
 first <- fread(file.path(source_dir, "first+dea_participant.csv"),
   select = c(
     "Participant ID",
     "Date N40 first reported (hyperplasia of prostate)", "Date F32 first reported (depressive episode)",
-    "Date F33 first reported (recurrent depressive disorder)",
     "Date of death | Instance 0", "Date of death | Instance 1"
   ), colClasses = "character",
   na.strings = c("", "NA")
@@ -108,9 +107,8 @@ stopifnot(identical(first$Participant_ID, baseline$Participant_ID))
 
 # UKB Coding 819 applies to first-occurrence fields only.
 first_columns <- c("Date N40 first reported (hyperplasia of prostate)",
-  "Date F32 first reported (depressive episode)",
-  "Date F33 first reported (recurrent depressive disorder)")
-first_conditions <- c("BPH", "depress", "depress")
+  "Date F32 first reported (depressive episode)")
+first_conditions <- c("BPH", "depress")
 for (condition in c("BPH", "depress")) {
   set(first, j = paste0("first_", condition), value = as.IDate(rep(NA_character_, nrow(first))))
   set(first, j = paste0("first_", condition, "_baseline"), value = FALSE)
